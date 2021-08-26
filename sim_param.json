@@ -1,0 +1,11 @@
+{
+    "a": 0.5e-6,
+    "resolution": 0.0625,
+    "sx_sy": 270e-6,
+    "sz": 1500e-6,
+    "f_center": 0.7e12,
+    "f_width": 1e12,
+    "source_center": -400e-6,
+    "pml_width": 120e-6,
+    "monitor_position": 500e-6
+}
