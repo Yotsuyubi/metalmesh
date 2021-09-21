@@ -6,6 +6,7 @@ from PIL import Image
 import pickle
 from tqdm import tqdm
 import warnings
+import argparse
 
 
 C = 299_792_458
@@ -40,6 +41,13 @@ def arrange_medium(mask, width, height, thickness, a, epsilon):
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-o', '--offset', type=int, default=0)
+    parser.add_argument('-n', '--num_sample', type=int, default=0)
+
+    args = parser.parse_args()    # 4. 引数を解析
 
     mp.verbosity(0)
 
@@ -95,8 +103,10 @@ if __name__ == "__main__":
     with open("geometry_params.json", "r") as fp:
         geometry_params = json.load(fp)
 
-    offset = 0
+    offset = args.offset
     num = len(geometry_params)
+    if args.num_sample != 0:
+        num = args.num_sample
 
     for (index, param) in enumerate(tqdm(geometry_params[offset:offset+num]), offset):
         medium_width = param["thickness"] * a / resolution
