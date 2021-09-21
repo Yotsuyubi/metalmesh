@@ -3,3 +3,6 @@ refs/
 spectrums/
 __pycache__/
 *.png
+geometry_params.json
+*.zip
+dataset/

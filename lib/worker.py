@@ -1,4 +1,4 @@
-from simulator import Simulation
+from .simulator import Simulation
 import meep as mp
 import numpy as np
 import json
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     source_center = sim_param["source_center"]
     pml_width = sim_param["pml_width"]
     monitor_position = sim_param["monitor_position"]
+    simulation_time = sim_param["simulation_time"]
 
     with open("refs/tran_incidnet.pickle", mode='rb') as fp:
         tran_incidnet = pickle.load(fp)
@@ -67,7 +68,7 @@ if __name__ == "__main__":
             f_center, f_width, source_center,
             field_size, resolution, pml_width,
             medium, medium_width, monitor_position,
-            sim_time=250e-12, n_freq=500, a=a
+            sim_time=simulation_time, n_freq=500, a=a
         )
 
     def medium_factory(thickness, medium0, medium90):
@@ -91,12 +92,13 @@ if __name__ == "__main__":
         }
         return medium
 
-    with open("img/geometry_params.json", "r") as fp:
+    with open("geometry_params.json", "r") as fp:
         geometry_params = json.load(fp)
 
     offset = 0
+    num = len(geometry_params)
 
-    for (index, param) in enumerate(tqdm(geometry_params[offset:]), offset):
+    for (index, param) in enumerate(tqdm(geometry_params[offset:offset+num]), offset):
         medium_width = param["thickness"] * a / resolution
         mask = load_mask(
             'img/{}'.format(param["filename"]),

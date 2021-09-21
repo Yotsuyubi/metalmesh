@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-data = np.load("spectrums/8210.npy")
+data = np.load("dataset/spectrums/0.npy")
 S11_0 = data[0] + data[1]*1j
 S11_90 = data[2] + data[3]*1j
 S21_0 = data[4] + data[5]*1j

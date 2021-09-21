@@ -5,9 +5,12 @@ import torch
 import json
 import torchvision.transforms.functional as F
 from torch import Tensor
+from scipy.ndimage import rotate
 
 torch.manual_seed(1337)
 np.random.seed(1337)
+
+NUM_SAMPLE = 10_000
 
 
 def circle(r, nrows=32, ncols=32):
@@ -19,38 +22,49 @@ def circle(r, nrows=32, ncols=32):
     return base
 
 
-def rect(width, height, nrows=32, ncols=32):
+def rect(size, nrows=32, ncols=32):
     base = np.zeros((nrows, ncols))
     y_cnt = nrows//2
     x_cnt = ncols//2
+    base[y_cnt-size//2:y_cnt-size//2+size,
+         x_cnt-size//2:x_cnt-size//2+size] = 1
+    return base
+
+
+def cross(width, height, nrows=32, ncols=32):
+    base = np.zeros((nrows, ncols))
+    y_cnt = nrows//2
+    x_cnt = ncols//2
+    base[y_cnt-width//2:y_cnt-width//2+width,
+         x_cnt-height//2:x_cnt-height//2+height] = 1
     base[y_cnt-height//2:y_cnt-height//2+height,
          x_cnt-width//2:x_cnt-width//2+width] = 1
     return base
 
 
-def cross(x_width, x_height, y_width, y_height, nrows=32, ncols=32):
-    base = np.zeros((nrows, ncols))
-    y_cnt = nrows//2
-    x_cnt = ncols//2
-    base[y_cnt-x_width//2:y_cnt-x_width//2+x_width,
-         x_cnt-x_height//2:x_cnt-x_height//2+x_height] = 1
-    base[y_cnt-y_height//2:y_cnt-y_height//2+y_height,
-         x_cnt-y_width//2:x_cnt-y_width//2+y_width] = 1
-    return base
+def get_symmetry(x):
+    image_unit = x[32//2:, 32//2:]
+    image_tri = np.tril(image_unit)
+    image_unit = image_tri + image_tri.T - \
+        np.diag(image_unit.diagonal())
+    image = np.zeros((32, 32))
+    image[:32//2, :32//2] = np.rot90(image_unit, k=2)
+    image[32//2:, :32//2] = np.rot90(image_unit, k=-1)
+    image[32//2:, 32//2:] = image_unit
+    image[:32//2, 32//2:] = np.rot90(image_unit, k=1)
+    return image
 
 
 def generate_random_params(num):
     circle = np.random.randint(5, 20, (num,), dtype=np.int8)
     circle_thickness = np.random.randint(1, 12, (num,), dtype=np.int8)
-    rect = np.random.randint(5, 20, (num, 2,), dtype=np.int8)
+    rect = np.random.randint(5, 20, (num, 1,), dtype=np.int8)
     rect_thickness = np.random.randint(1, 12, (num,), dtype=np.int8)
-    cross_h = np.random.randint(15, 20, (num, 2,), dtype=np.int8)
-    cross_w = np.random.randint(5, 10, (num, 2,), dtype=np.int8)
-    cross = np.zeros((num, 4), dtype=np.int8)
+    cross_h = np.random.randint(15, 20, (num, 1,), dtype=np.int8)
+    cross_w = np.random.randint(5, 10, (num, 1,), dtype=np.int8)
+    cross = np.zeros((num, 2), dtype=np.int8)
     cross[:, 0] = cross_w[:, 0]
     cross[:, 1] = cross_h[:, 0]
-    cross[:, 2] = cross_w[:, 1]
-    cross[:, 3] = cross_h[:, 1]
     cross_thickness = np.random.randint(1, 12, (num,), dtype=np.int8)
     return (circle, circle_thickness), (rect, rect_thickness), (cross, cross_thickness)
 
@@ -95,49 +109,52 @@ class RandomAffine(torchvision.transforms.RandomAffine):
 if __name__ == "__main__":
 
     affine = RandomAffine()
-    geometrys = generate_random_params(3000)
+    geometrys = list(generate_random_params(NUM_SAMPLE//6)) + \
+        list(generate_random_params(NUM_SAMPLE//6))
     factorys = [
-        circle, rect, cross
+        circle, rect, cross, circle, rect, cross
     ]
     shapes = [
-        "circle", "rectangle", "cross"
+        "circle", "rectangle", "cross",
+        "circle_affine", "rectangle_affine", "cross_affine"
     ]
     i = 0
     geometry_params = []
-    for (factory, params, shape) in zip(factorys, geometrys, shapes):
+    for n, (factory, params, shape) in enumerate(zip(factorys, geometrys, shapes)):
         for (param, thickness) in zip(*params):
             if type(param) == np.int8:
                 img = factory(param)
             else:
                 img = factory(*param)
-            img_affine, ret = affine(img)
+            if n > 2:
+                img, ret = affine(img)
+                geometry_param.update({
+                    "angle": ret[0],
+                    "x_translation": ret[1][0],
+                    "y_translation": ret[1][1],
+                    "shear": ret[3][0]
+                })
+            img_symmetry = get_symmetry(img)
+            if torch.rand(1) < 0.5:
+                img_symmetry = rotate(img_symmetry, angle=45)
             filename = "{}_{}.png".format(i, thickness)
             Image.fromarray(
-                img_affine*255
+                img_symmetry*255
             ).convert('L').save("img/{}".format(filename))
 
-            if shape == "circle":
+            if shape == "circle" or shape == "circle_affine":
                 geometry_param = {
                     "r": int(param)
                 }
-            elif shape == "rectangle":
+            elif shape == "rectangle" or shape == "rectangle_affine":
                 geometry_param = {
-                    "width": int(param[0]),
-                    "height": int(param[1])
+                    "size": int(param[0]),
                 }
             else:
                 geometry_param = {
-                    "x_width": int(param[0]),
-                    "x_height": int(param[1]),
-                    "y_width": int(param[2]),
-                    "y_height": int(param[3]),
+                    "width": int(param[0]),
+                    "height": int(param[1]),
                 }
-            geometry_param.update({
-                "angle": ret[0],
-                "x_translation": ret[1][0],
-                "y_translation": ret[1][1],
-                "shear": ret[3][0]
-            })
             geometry_param.update({
                 "shape": shape,
                 "thickness": int(thickness),
@@ -147,5 +164,5 @@ if __name__ == "__main__":
 
             i += 1
 
-    with open("img/geometry_params.json", "w") as fp:
+    with open("geometry_params.json", "w") as fp:
         json.dump(geometry_params, fp)

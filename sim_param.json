@@ -7,5 +7,6 @@
     "f_width": 1e12,
     "source_center": -400e-6,
     "pml_width": 120e-6,
-    "monitor_position": 500e-6
+    "monitor_position": 500e-6,
+    "simulation_time": 100e-12
 }

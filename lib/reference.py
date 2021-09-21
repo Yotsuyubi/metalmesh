@@ -1,4 +1,4 @@
-from simulator import Simulation
+from .simulator import Simulation
 import meep as mp
 import numpy as np
 import json
@@ -42,6 +42,7 @@ if __name__ == "__main__":
     source_center = sim_param["source_center"]
     pml_width = sim_param["pml_width"]
     monitor_position = sim_param["monitor_position"]
+    simulation_time = sim_param["simulation_time"]
     medium_width = a / resolution
 
     def simulator_factory(medium, medium_width):
@@ -49,7 +50,7 @@ if __name__ == "__main__":
             f_center, f_width, source_center,
             field_size, resolution, pml_width,
             medium, medium_width, monitor_position,
-            sim_time=80e-12, n_freq=500, a=a
+            sim_time=simulation_time, n_freq=500, a=a
         )
 
     medium = medium_factory(medium_width / a)
