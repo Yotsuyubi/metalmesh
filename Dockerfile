@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
 RUN apt-get update
-RUN apt-get install -y wget vim git
+RUN apt-get install -y wget vim git zip unzip
 RUN apt-get install -y python3 
 
 ADD build_meep_python.sh /home
