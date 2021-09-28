@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-data = np.load("dataset/spectrums/0.npy")
+data = np.load(
+    "/home/user/Projects/metalmesh/spectrum_zip/2000/spectrums/2408.npy")
 S11_0 = data[0] + data[1]*1j
 S11_90 = data[2] + data[3]*1j
 S21_0 = data[4] + data[5]*1j

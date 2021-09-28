@@ -111,7 +111,7 @@ if __name__ == "__main__":
     for (index, param) in enumerate(tqdm(geometry_params[offset:offset+num]), offset):
         medium_width = param["thickness"] * a / resolution
         mask = load_mask(
-            'img/{}'.format(param["filename"]),
+            'imgs/{}'.format(param["filename"]),
             (32, 32)
         )
         medium0 = arrange_medium(

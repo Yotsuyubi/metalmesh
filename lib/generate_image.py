@@ -136,11 +136,14 @@ if __name__ == "__main__":
                 })
             img_symmetry = get_symmetry(img)
             if torch.rand(1) < 0.5:
-                img_symmetry = rotate(img_symmetry, angle=45)
+                img_symmetry = rotate(
+                    img_symmetry, angle=45,
+                    reshape=False, order=0
+                )
             filename = "{}_{}.png".format(i, thickness)
             Image.fromarray(
                 img_symmetry*255
-            ).convert('L').save("img/{}".format(filename))
+            ).convert('L').save("imgs/{}".format(filename))
 
             if shape == "circle" or shape == "circle_affine":
                 geometry_param = {

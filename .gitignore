@@ -1,6 +1,6 @@
-img/
-refs/
-spectrums/
+imgs/*.png
+refs/*.pickle
+spectrums/*.npy
 __pycache__/
 *.png
 geometry_params.json
